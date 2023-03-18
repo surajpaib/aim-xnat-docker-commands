@@ -1,0 +1,73 @@
+{
+    "name": "thymus-ct-bundle",
+    "description": "Run thymus segmentation on a scan",
+    "label": "thymus-segmentation",
+    "info-url": "",
+    "version": "0.1",
+    "schema-version": "1.0",
+    "type": "docker",
+    "runtime": "nvidia",
+    "gpus": "all",
+    "shm-size": "4g",
+    "image": "monai_bundle_inference:0.1",
+    "command-line": "python3 /app/mhub/monai_bundle/scripts/run.py",
+    "mounts": [
+        {
+            "name": "in",
+            "writable": "false",
+            "path": "/app/data/input_data"
+        },
+        {
+            "name": "out",
+            "writable": "true",
+            "path": "/app/data/output_data"
+        }
+    ],
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "output_files",
+            "description": "The seg files",
+            "path": "thymus.seg.dcm",
+            "mount": "out",
+            "required": true
+        }
+    ],
+    "xnat": [
+        {
+            "name": "thymus-segmentation",
+            "description": "Run thymus-segmentation on a Scan",
+            "label": "thymus-segmentation",
+            "contexts": ["xnat:ctScanData"],
+            "external-inputs": [
+                {
+                    "name": "scan",
+                    "description": "Input scan",
+                    "type": "Scan",
+                    "matcher": "'DICOM' in @.resources[*].label",
+                    "required": true
+                }
+        
+            ],
+            "derived-inputs": [
+                {
+                    "name": "scan-dicoms",
+                    "description": "The dicom resource on the scan",
+                    "type": "Resource",
+                    "derived-from-wrapper-input": "scan",
+                    "provides-files-for-command-mount": "in",
+                    "matcher": "@.label == 'DICOM'"
+                }
+            ],
+            "output-handlers": [
+                {
+                    "name": "nrrd",
+                    "accepts-command-output": "output_files",
+                    "as-a-child-of-wrapper-input": "scan",
+                    "type": "Resource",
+                    "label": "thymus-Segmentations"
+                }
+            ]
+        }
+    ]
+}
