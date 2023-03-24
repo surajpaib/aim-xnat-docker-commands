@@ -1,0 +1,59 @@
+{
+    "name": "metadata-editor",
+    "description": "Generate metadata for a selected scan",
+    "version": "1.3.1",
+    "schema-version": "1.0",
+    "image": "metadata-editor",
+    "type": "docker",
+    "command-line": "python3 /app/update-metadata.py #URI# $XNAT_HOST $XNAT_USER $XNAT_PASS",
+    "override-entrypoint": true,
+    "mounts": [
+        {
+            "name": "in",
+            "writable": "false",
+            "path": "/app/data/input_data"
+        }
+    ],
+    "inputs": [
+        {
+            "name": "URI",
+            "description": "uri of the scan to be edited",
+            "required": true
+        }
+    ],
+    "outputs": [],
+    "xnat": [
+        {
+            "name": "metadata-editor",
+            "description": "Edit metadata for a scan",
+            "contexts": ["xnat:ctScanData"],
+            "external-inputs": [
+                {
+                    "name": "scan",
+                    "description": "Input scan",
+                    "type": "Scan",
+                    "matcher": "'DICOM' in @.resources[*].label",
+                    "required": true
+                }
+            ],
+            "derived-inputs": [
+                {
+                    "name": "uri",
+                    "required": true,
+                    "derived-from-wrapper-input": "scan",
+                    "derived-from-xnat-object-property": "uri",
+                    "provides-value-for-command-input": "URI"
+                },
+                {
+                    "name": "scan-dicoms",
+                    "description": "The dicom resource on the scan",
+                    "type": "Resource",
+                    "derived-from-wrapper-input": "scan",
+                    "provides-files-for-command-mount": "in",
+                    "matcher": "@.label == 'DICOM'"
+                }
+            ],
+            "output-handlers": []
+        }
+    ]
+}
